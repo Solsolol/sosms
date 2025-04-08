@@ -12,21 +12,21 @@
   },
   "workflowApiVersion": "1.1",
   "configurationArguments": {
-    "applicationExtensionKey": "66dbcb6a-867a-4214-8981-75725a011375",
+    "applicationExtensionKey": "ab6caf9b-a2bb-4211-89f2-53f457552593",
     "save": {
-      "url": "https://sfmc-sms-ca.herokuapp.com/activity/save",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/save",
       "verb": "POST",
       "body": "",
       "useJwt": false
     },
     "publish": {
-      "url": "https://sfmc-sms-ca.herokuapp.com/activity/publish",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/publish",
       "verb": "POST",
       "body": "",
       "useJwt": false
     },
     "validate": {
-      "url": "https://sfmc-sms-ca.herokuapp.com/activity/validate",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/validate",
       "verb": "POST",
       "body": "",
       "useJwt": false
@@ -55,7 +55,7 @@
           "inputs": "{}"
         }
       ],
-      "url": "https://sfmc-sms-ca.herokuapp.com/activity/execute",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/execute",
       "verb": "POST",
       "body": "",
       "header": "",
@@ -68,7 +68,7 @@
     }
   },
   "edit": {
-    "url": "https://sfmc-sms-ca.herokuapp.com/index.html",
+    "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/index.html",
     "height": 300,
     "width": 900
   }
