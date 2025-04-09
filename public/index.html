@@ -1,28 +1,94 @@
 <!DOCTYPE html>
-
-<html lang="en">
-
+<html>
 <head>
-	<meta charset="utf-8">
-	<title>Custom Activity</title>
-	<script type="text/javascript" src="js/jquery.min.js"></script>
-	<script data-main="js/main.js" type="text/javascript" src="js/require.js"></script>
+    <meta charset="utf-8" />
+    <title>SMS Validation Custom Activity</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="text/javascript" src="postmonger.js"></script>
+    <script type="text/javascript">
+        var connection = new Postmonger.Session();
+        var payload = {};
+        var lastStepEnabled = false;
+        var steps = [ 
+            { "label": "Contact Verification", "key": "step1" }
+        ];
 
-	<link rel="stylesheet" href="index.css">
+        $(window).ready(onRender);
+
+        connection.on('initActivity', initialize);
+        connection.on('requestedTokens', onGetTokens);
+        connection.on('requestedEndpoints', onGetEndpoints);
+        connection.on('clickedNext', save);
+
+        function onRender() {
+            connection.trigger('ready');
+            connection.trigger('requestTokens');
+            connection.trigger('requestEndpoints');
+        }
+
+        function initialize(data) {
+            if (data) {
+                payload = data;
+            }
+            
+            connection.trigger('updateButton', {
+                button: 'next',
+                text: 'done',
+                visible: true,
+                enabled: true
+            });
+        }
+
+        function onGetTokens(tokens) {
+            console.log(tokens);
+        }
+
+        function onGetEndpoints(endpoints) {
+            console.log(endpoints);
+        }
+
+        function save() {
+            payload['arguments'].execute.inArguments = [{
+                "email": "{{Contact.Attribute.SMS_Journey_Entry.Email}}",
+                "phone": "{{Contact.Attribute.SMS_Journey_Entry.Phone}}",
+                "Date": "{{Contact.Attribute.SMS_Journey_Entry.Date}}"
+            }];
+            
+            payload['metaData'].isConfigured = true;
+
+            connection.trigger('updateActivity', payload);
+        }
+    </script>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .step {
+            margin-bottom: 20px;
+        }
+        .info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
 </head>
-
 <body>
-	<p>Inputs for custom activity</p>
-	<div>
-		<label class="labelClass">Api Key</label>
-		<input class="textbox" placeholder="Enter Api Key" type="text" required="required" id="apikey"
-			minlength="1" />
-			<div>
-				<label class="labelClass">Message</label>
-				<textarea class="textbox" placeholder="Enter message" required="required" id="message"
-					minlength="1" ></textarea>
-			</div>
-	</div>
+    <div id="step1" class="step">
+        <h2>SMS Contact Verification</h2>
+        <div class="info">
+            <p>This activity will verify:</p>
+            <ul>
+                <li>Contact Email</li>
+                <li>Phone Number</li>
+                <li>Date</li>
+            </ul>
+        </div>
+        <div class="info">
+            <p>The system will validate the phone number format and update the contact record.</p>
+        </div>
+    </div>
 </body>
-
 </html>
