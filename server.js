@@ -39,6 +39,6 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
 });
 
-app.listen(process.env.PORT || 8080, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log('SMS Custom Activity backend is now running!');
 });
