@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>DE validation Custom Activity</title>
+    <title>validation de vos informations </title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="text/javascript" src="postmonger.js"></script>
     <script type="text/javascript">
@@ -23,7 +23,7 @@
                 // Pré-remplir le formulaire avec les données de la DE
                 $('#email').val('{{Contact.Attribute.SMS_Journey_Entry.Email}}');
                 $('#phone').val('{{Contact.Attribute.SMS_Journey_Entry.Phone}}');
-                $('#date').val('{{Contact.Attribute.SMS_Journey_Entry.Date}}');
+                $('#date').val('{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}');
             }
             
             connection.trigger('updateButton', {
@@ -50,7 +50,6 @@
             if (isPhoneValid) {
                 $('#phoneStatus').html('✓ Validation en cours...').removeClass('invalid').addClass('valid');
                 
-                // Appel au serveur pour vérifier/mettre à jour la DE
                 fetch('/validateData', {
                     method: 'POST',
                     headers: {
@@ -65,25 +64,62 @@
                             "email": formData.email,
                             "phone": formData.phone,
                             "Date": new Date().toISOString(),
-                            "previousDate": formData.date,
                             "isValidated": true
                         }];
                         
                         payload['metaData'].isConfigured = true;
                         connection.trigger('updateActivity', payload);
-                        showNotification('Données validées et enregistrées dans la DE', 'success');
+                        showNotification('Données validées et enregistrées', 'success');
+                    } else if (data.isDuplicate) {
+                        // Gestion des doublons
+                        let message = 'Doublon détecté : ';
+                        if (data.duplicateInfo.emailExists) {
+                            message += 'Email déjà existant. ';
+                        }
+                        if (data.duplicateInfo.phoneExists) {
+                            message += 'Téléphone déjà utilisé. ';
+                        }
+                        
+                        // Afficher les détails des doublons
+                        showDuplicateDetails(data.duplicateInfo.existingData);
+                        
+                        $('#phoneStatus').html('⚠ Doublon détecté').removeClass('valid').addClass('invalid');
+                        showNotification(message, 'error');
                     } else {
                         throw new Error(data.error);
                     }
                 })
                 .catch(error => {
                     $('#phoneStatus').html('✗ Erreur de validation').removeClass('valid').addClass('invalid');
-                    showNotification('Erreur lors de la mise à jour: ' + error.message, 'error');
+                    showNotification('Erreur: ' + error.message, 'error');
                 });
             } else {
                 $('#phoneStatus').html('✗ Format invalide').removeClass('valid').addClass('invalid');
                 showNotification('Format du numéro invalide', 'error');
             }
+        }
+
+        // Fonction pour afficher les détails des doublons
+        function showDuplicateDetails(duplicates) {
+            const detailsHtml = duplicates.map(item => `
+                <div class="duplicate-entry">
+                    <p>Email: ${item.Email}</p>
+                    <p>Téléphone: ${item.Phone}</p>
+                    <p>Date: ${new Date(item.RegistrationDate).toLocaleDateString()}</p>
+                </div>
+            `).join('');
+    
+            const duplicateDiv = $('<div>')
+                .addClass('duplicate-info')
+                .html(`
+                    <h4>Enregistrements existants :</h4>
+                    ${detailsHtml}
+                `)
+                .insertAfter('#validationForm');
+    
+            setTimeout(() => {
+                duplicateDiv.fadeOut(() => duplicateDiv.remove());
+            }, 5000);
         }
 
         function showNotification(message, type) {
