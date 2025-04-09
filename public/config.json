@@ -1,4 +1,5 @@
 {
+  "workflowApiVersion": "1.1",
   "metaData": {
     "icon": "./images/bell_icon.jpg",
     "iconSmall": "./images/bell_icon.jpg"
@@ -10,61 +11,16 @@
       "description": "Custom Activity to send SMS using Text local"
     }
   },
-  "workflowApiVersion": "1.1",
   "configurationArguments": {
     "applicationExtensionKey": "ab6caf9b-a2bb-4211-89f2-53f457552593",
     "save": {
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/save",
-      "verb": "POST",
-      "body": "",
-      "useJwt": false
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/save"
     },
     "publish": {
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/publish",
-      "verb": "POST",
-      "body": "",
-      "useJwt": false
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/publish"
     },
     "validate": {
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/validate",
-      "verb": "POST",
-      "body": "",
-      "useJwt": false
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/validate"
     }
-  },
-  "arguments": {
-    "execute": {
-      "inArguments": [
-        {
-          "email": "{{Contact.Attribute.SMS_Journey_Entry.Email}}",
-          "phone": "{{Contact.Attribute.SMS_Journey_Entry.Phone}}",
-          "Date": "{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}",
-          "deExternalKey": "5FC49EC4-BB94-449D-94FF-170C753F309F"
-        }
-      ],
-      "outArguments": [
-        {
-          "email": "String",
-          "validatedPhone": "String",
-          "verificationDate": "Date",
-          "isVerified": "Boolean",
-          "errorMessage": "String"
-        }
-      ],
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/execute",
-      "verb": "POST",
-      "body": "",
-      "header": "",
-      "format": "json",
-      "useJwt": false,
-      "timeout": 90000,
-      "retryCount": 5,
-      "retryDelay": 100
-    }
-  },
-  "edit": {
-    "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/index.html",
-    "height": 300,
-    "width": 900
   }
 }
