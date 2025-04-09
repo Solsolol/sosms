@@ -25,31 +25,34 @@ app.post('/validateData', async (req, res) => {
             client_secret: sfmcConfig.clientSecret
         });
         
-        // Vérifier si l'enregistrement existe
+        // Vérifier les doublons par email et téléphone
         const searchResponse = await axios.get(
             `${sfmcConfig.restUri}/data/v1/customobjectdata/key/SMS_Journey_Entry/rowset`,
             {
                 headers: { Authorization: `Bearer ${authResponse.data.access_token}` },
-                params: { $filter: `Email eq '${email}'` }
+                params: { 
+                    $filter: `Email eq '${email}' OR Phone eq '${phone}'`
+                }
             }
         );
 
         if (searchResponse.data.items.length > 0) {
-            // Mise à jour
-            await axios.patch(
-                `${sfmcConfig.restUri}/data/v1/customobjectdata/key/SMS_Journey_Entry/rowset`,
-                {
-                    items: [{
-                        Email: email,
-                        Phone: phone,
-                        RegistrationDate: date
-                    }]
-                },
-                { headers: { Authorization: `Bearer ${authResponse.data.access_token}` } }
-            );
-            res.json({ success: true, message: 'Data updated' });
+            const duplicates = searchResponse.data.items;
+            const emailMatch = duplicates.find(item => item.Email === email);
+            const phoneMatch = duplicates.find(item => item.Phone === phone);
+
+            // Retourner les informations sur les doublons
+            res.json({
+                success: false,
+                isDuplicate: true,
+                duplicateInfo: {
+                    emailExists: !!emailMatch,
+                    phoneExists: !!phoneMatch,
+                    existingData: duplicates
+                }
+            });
         } else {
-            // Création
+            // Pas de doublon, créer l'enregistrement
             await axios.post(
                 `${sfmcConfig.restUri}/data/v1/customobjectdata/key/SMS_Journey_Entry/rowset`,
                 {
@@ -61,7 +64,7 @@ app.post('/validateData', async (req, res) => {
                 },
                 { headers: { Authorization: `Bearer ${authResponse.data.access_token}` } }
             );
-            res.json({ success: true, message: 'Data created' });
+            res.json({ success: true, message: 'Data created successfully' });
         }
     } catch (error) {
         console.error('Error:', error);
