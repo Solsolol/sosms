@@ -2,155 +2,87 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title> DE validation Custom Activity</title>
+    <title>DE validation Custom Activity</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="text/javascript" src="postmonger.js"></script>
     <script type="text/javascript">
         var connection = new Postmonger.Session();
         var payload = {};
-        var currentStep = 0;
 
         $(window).ready(onRender);
-
-        // Événements Postmonger
         connection.on('initActivity', initialize);
-        connection.on('requestedTokens', onGetTokens);
-        connection.on('requestedEndpoints', onGetEndpoints);
         connection.on('clickedNext', onClickedNext);
-        connection.on('clickedBack', onClickedBack);
 
         function onRender() {
-            // Indique à SFMC que l'activité est prête
             connection.trigger('ready');
-            connection.trigger('requestTokens');
-            connection.trigger('requestEndpoints');
-
-            // Afficher les données de test
-            $('#currentData').html('Chargement des données...');
         }
 
         function initialize(data) {
             if (data) {
                 payload = data;
-                $('#currentData').html('Données reçues:<br><pre>' + JSON.stringify(data, null, 2) + '</pre>');
-            } else {
-                $('#currentData').html('Aucune configuration précédente');
+                // Pré-remplir le formulaire avec les données de la DE
+                $('#email').val('{{Contact.Attribute.SMS_Journey_Entry.Email}}');
+                $('#phone').val('{{Contact.Attribute.SMS_Journey_Entry.Phone}}');
+                $('#date').val('{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}');
             }
-        }
-
-        function onGetTokens(tokens) {
-            if (tokens) {
-                $('#tokens').html('Tokens reçus:<br><pre>' + JSON.stringify(tokens, null, 2) + '</pre>');
-            } else {
-                $('#tokens').html('Erreur: Tokens non reçus');
-            }
-        }
-
-        function onGetEndpoints(endpoints) {
-            if (endpoints) {
-                $('#endpoints').html('Endpoints reçus:<br><pre>' + JSON.stringify(endpoints, null, 2) + '</pre>');
-            } else {
-                $('#endpoints').html('Erreur: Endpoints non reçus');
-            }
+            
+            connection.trigger('updateButton', {
+                button: 'next',
+                text: 'Valider',
+                visible: true,
+                enabled: true
+            });
         }
 
         function onClickedNext() {
-            // Sauvegarder les données
-            payload['arguments'].execute.inArguments = [{
-                "email": "{{Contact.Attribute.SMS_Journey_Entry.Email}}",
-                "phone": "{{Contact.Attribute.SMS_Journey_Entry.Phone}}",
-                "Date": "{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}"
-            }];
-            
-            payload['metaData'].isConfigured = true;
-
-            connection.trigger('updateActivity', payload);
+            const formData = {
+                email: $('#email').val(),
+                phone: $('#phone').val(),
+                date: $('#date').val()
+            };
+            validateAndUpdate(formData);
         }
 
-        function onClickedBack() {
-            connection.trigger('prevStep');
+        function validateAndUpdate(formData) {
+            const phoneRegex = /^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/;
+            const isPhoneValid = phoneRegex.test(formData.phone);
+
+            if (isPhoneValid) {
+                $('#phoneStatus').html('✓ Numéro valide').removeClass('invalid').addClass('valid');
+                
+                // Mise à jour du payload pour la DE
+                payload['arguments'].execute.inArguments = [{
+                    "email": formData.email,
+                    "phone": formData.phone,
+                    "Date": new Date().toISOString(),
+                    "previousDate": formData.date,
+                    "isValidated": true
+                }];
+                
+                payload['metaData'].isConfigured = true;
+                connection.trigger('updateActivity', payload);
+                showNotification('Données validées et enregistrées', 'success');
+            } else {
+                $('#phoneStatus').html('✗ Format invalide').removeClass('valid').addClass('invalid');
+                showNotification('Format du numéro invalide', 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notificationDiv = $('<div>')
+                .addClass('notification ' + type)
+                .text(message)
+                .appendTo('.container');
+
+            setTimeout(() => {
+                notificationDiv.fadeOut(() => notificationDiv.remove());
+            }, 3000);
         }
     </script>
     <style>
-        body {
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .info-block {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-        }
-        pre {
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-        }
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>DE validation Custom Activity</h2>
-        
-        <!-- Ajout du formulaire de validation -->
-        <div class="info-block">
-            <h3>Validation des données</h3>
-            <form id="validationForm">
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" class="form-control" readonly>
-                    <span id="emailStatus" class="status"></span>
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">Téléphone:</label>
-                    <input type="tel" id="phone" class="form-control">
-                    <span id="phoneStatus" class="status"></span>
-                </div>
-                
-                <div class="form-group">
-                    <label for="date">Date d'enregistrement:</label>
-                    <input type="date" id="date" class="form-control" readonly>
-                    <span id="dateStatus" class="status"></span>
-                </div>
-                
-                <button type="button" id="validateBtn" class="btn btn-primary">Valider</button>
-            </form>
-        </div>
-    
-        <!-- Blocs existants -->
-        <div class="info-block">
-            <h3>Configuration actuelle</h3>
-            <div id="currentData">Chargement...</div>
-        </div>
-
-        <div class="info-block">
-            <h3>Tokens</h3>
-            <div id="tokens">En attente...</div>
-        </div>
-
-        <div class="info-block">
-            <h3>Endpoints</h3>
-            <div id="endpoints">En attente...</div>
-        </div>
-    </div>
-
-    <!-- Ajout du style -->
-    <style>
-        .form-group {
-            margin-bottom: 15px;
-        }
+        body { padding: 20px; font-family: Arial, sans-serif; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
         .form-control {
             width: 100%;
             padding: 8px;
@@ -158,75 +90,43 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        .btn {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
+        .status { margin-top: 5px; font-size: 0.9em; }
+        .valid { color: green; }
+        .invalid { color: red; }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
             border-radius: 4px;
-            cursor: pointer;
+            color: white;
+            z-index: 1000;
         }
-        .status {
-            display: block;
-            margin-top: 5px;
-            font-size: 0.9em;
-        }
-        .valid {
-            color: green;
-        }
-        .invalid {
-            color: red;
-        }
+        .notification.success { background-color: #28a745; }
+        .notification.error { background-color: #dc3545; }
     </style>
-
-    <!-- Ajout du JavaScript pour la validation -->
-    <script>
-        $('#validateBtn').on('click', function() {
-            const formData = {
-                email: $('#email').val(),
-                phone: $('#phone').val(),
-                date: $('#date').val()
-            };
-    
-            // Comparaison avec les données de la DE
-            validateAndUpdate(formData);
-        });
-    
-        function validateAndUpdate(formData) {
-            // Mise à jour du payload avec les nouvelles données
-            payload['arguments'].execute.inArguments[0] = {
-                "email": formData.email,
-                "phone": formData.phone,
-                "Date": formData.date
-            };
-    
-            // Simuler la validation
-            const isValid = true; // À remplacer par votre logique de validation
-    
-            if (isValid) {
-                connection.trigger('updateActivity', payload);
-                $('#phoneStatus').html('Validé').addClass('valid');
-            } else {
-                $('#phoneStatus').html('Non valide').addClass('invalid');
-            }
-        }
-    
-        // Mise à jour de la fonction initialize pour pré-remplir le formulaire
-        function initialize(data) {
-            if (data) {
-                payload = data;
-                // Pré-remplir le formulaire avec les données existantes
-                if (data.arguments && data.arguments.execute.inArguments[0]) {
-                    const args = data.arguments.execute.inArguments[0];
-                    $('#email').val(args.email);
-                    $('#phone').val(args.phone);
-                    $('#date').val(args.Date);
-                }
-                $('#currentData').html('Données reçues:<br><pre>' + JSON.stringify(data, null, 2) + '</pre>');
-            } else {
-                $('#currentData').html('Aucune configuration précédente');
-            }
-        }
-    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>DE validation Custom Activity</h2>
+        <div class="info-block">
+            <h3>Validation des données</h3>
+            <form id="validationForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Téléphone:</label>
+                    <input type="tel" id="phone" class="form-control">
+                    <span id="phoneStatus" class="status"></span>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date d'enregistrement:</label>
+                    <input type="date" id="date" class="form-control" readonly>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
