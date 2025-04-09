@@ -1,5 +1,5 @@
-{
-	"name": "sf-custom-activity",
+ {
+	"name": "DE-custom-activity",
 	"version": "0.0.2",
 	"description": "Backend for the Salesforce Service Cloud custom split activity",
 	"main": "backend/server.js",
