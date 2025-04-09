@@ -32,27 +32,23 @@
       "useJwt": false
     }
   },
-  "wizardSteps": [
-    {
-      "key": "eventdefinitionkey",
-      "label": "Event Definition Key"
-    }
-  ],
-  "userInterfaces": {
-    "configModal": {
-      "height": 500,
-      "width": 1200,
-      "fullscreen": true
-    },
-    "runningHover": {
-      "url": "runningHover.html"
-    }
-  },
   "arguments": {
     "execute": {
       "inArguments": [
         {
-          "inputs": "{}"
+          "email": "{{Contact.Attribute.SMS_Journey_Entry.Email}}",
+          "phone": "{{Contact.Attribute.SMS_Journey_Entry.Phone}}",
+          "Date": "{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}",
+          "deExternalKey": "5FC49EC4-BB94-449D-94FF-170C753F309F"
+        }
+      ],
+      "outArguments": [
+        {
+          "email": "String",
+          "validatedPhone": "String",
+          "verificationDate": "Date",
+          "isVerified": "Boolean",
+          "errorMessage": "String"
         }
       ],
       "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/execute",
@@ -61,7 +57,6 @@
       "header": "",
       "format": "json",
       "useJwt": false,
-      "customerKey": "<EXTERNAL KEY OF THE SALT KEY FOR THE JWT>",
       "timeout": 90000,
       "retryCount": 5,
       "retryDelay": 100
