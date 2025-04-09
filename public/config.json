@@ -7,8 +7,8 @@
   "type": "REST",
   "lang": {
     "en-US": {
-      "name": "SMS TextLocal Custom Activity",
-      "description": "Custom Activity to send SMS using Text local"
+      "name": "DE Custom Activity",
+      "description": "vérifier et mettre à jour la DE"
     }
   },
   "configurationArguments": {
