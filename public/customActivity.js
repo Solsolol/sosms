@@ -1,14 +1,3 @@
-/* ************************************************************
-Author(s): Niikhythan 
-Sprint: Sprint 1
-Created On: 6/2020
-Modified by: 
-Modified on:
-====================
-Description: This js file contains the  module that interacts with the custom
-	activity FE and Journey builder.
-************************************************************ */
-
 'use strict';
 
 define(function (require) {
@@ -55,8 +44,8 @@ define(function (require) {
       settings.arguments.execute.inArguments[0].inputs
 	);
 	configInputs.phoneNumber  = '{{Event.' + eventDefinitionKey + '.PhoneNumber}}';
-  configInputs.apikey = $('#apikey').val();
-  configInputs.message = $('#message').val();
+        configInputs.apikey = $('#apikey').val();
+        configInputs.message = $('#message').val();
 	settings.arguments.execute.inArguments[0].inputs = JSON.stringify(
 		configInputs
   );  
