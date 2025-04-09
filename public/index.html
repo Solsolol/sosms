@@ -8,55 +8,70 @@
     <script type="text/javascript">
         var connection = new Postmonger.Session();
         var payload = {};
-        var lastStepEnabled = false;
-        var steps = [ 
-            { "label": "Contact Verification", "key": "step1" }
-        ];
+        var currentStep = 0;
 
         $(window).ready(onRender);
 
+        // Événements Postmonger
         connection.on('initActivity', initialize);
         connection.on('requestedTokens', onGetTokens);
         connection.on('requestedEndpoints', onGetEndpoints);
-        connection.on('clickedNext', save);
+        connection.on('clickedNext', onClickedNext);
+        connection.on('clickedBack', onClickedBack);
 
         function onRender() {
+            // Indique à SFMC que l'activité est prête
             connection.trigger('ready');
             connection.trigger('requestTokens');
             connection.trigger('requestEndpoints');
+
+            // Afficher les données de test
+            $('#currentData').html('Chargement des données...');
         }
 
         function initialize(data) {
             if (data) {
                 payload = data;
+                
+                // Afficher les données reçues
+                var dataStr = JSON.stringify(data, null, 2);
+                $('#currentData').html('Données reçues:<br><pre>' + dataStr + '</pre>');
             }
-            
+
+            // Activer le bouton "Suivant"
             connection.trigger('updateButton', {
                 button: 'next',
-                text: 'done',
+                text: 'Valider',
                 visible: true,
                 enabled: true
             });
         }
 
         function onGetTokens(tokens) {
-            console.log(tokens);
+            // Afficher les tokens
+            $('#tokens').html('Tokens reçus:<br><pre>' + JSON.stringify(tokens, null, 2) + '</pre>');
         }
 
         function onGetEndpoints(endpoints) {
-            console.log(endpoints);
+            // Afficher les endpoints
+            $('#endpoints').html('Endpoints reçus:<br><pre>' + JSON.stringify(endpoints, null, 2) + '</pre>');
         }
 
-        function save() {
+        function onClickedNext() {
+            // Sauvegarder les données
             payload['arguments'].execute.inArguments = [{
                 "email": "{{Contact.Attribute.SMS_Journey_Entry.Email}}",
                 "phone": "{{Contact.Attribute.SMS_Journey_Entry.Phone}}",
-                "Date": "{{Contact.Attribute.SMS_Journey_Entry.Date}}"
+                "Date": "{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}"
             }];
             
             payload['metaData'].isConfigured = true;
 
             connection.trigger('updateActivity', payload);
+        }
+
+        function onClickedBack() {
+            connection.trigger('prevStep');
         }
     </script>
     <style>
@@ -64,30 +79,46 @@
             padding: 20px;
             font-family: Arial, sans-serif;
         }
-        .step {
-            margin-bottom: 20px;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
         }
-        .info {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f8f9fa;
+        .info-block {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
             border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="step1" class="step">
-        <h2>SMS Contact Verification</h2>
-        <div class="info">
-            <p>This activity will verify:</p>
-            <ul>
-                <li>Contact Email</li>
-                <li>Phone Number</li>
-                <li>Date</li>
-            </ul>
+    <div class="container">
+        <h2>SMS Validation Custom Activity</h2>
+        
+        <div class="info-block">
+            <h3>Configuration actuelle</h3>
+            <div id="currentData">Chargement...</div>
         </div>
-        <div class="info">
-            <p>The system will validate the phone number format and update the contact record.</p>
+
+        <div class="info-block">
+            <h3>Tokens</h3>
+            <div id="tokens">En attente...</div>
+        </div>
+
+        <div class="info-block">
+            <h3>Endpoints</h3>
+            <div id="endpoints">En attente...</div>
         </div>
     </div>
 </body>
