@@ -1,44 +1,43 @@
 const express = require('express');
 const app = express();
 
-// Enable JSON parsing
 app.use(express.json());
+app.use(express.static('public'));
 
-// Add config.json route
-app.get('/config.json', (req, res) => {
-  res.json({
-    workflowApiVersion: '1.1',
-    metaData: {
-      icon: 'images/icon.png',
-      category: 'message'
-    },
-    type: 'REST',
-    lang: {
-      'en-US': {
-        name: 'SMS Custom Activity',
-        description: 'A custom SMS activity'
-      }
-    },
-    arguments: {
-      execute: {
-        inArguments: [],
-        outArguments: [],
-        url: 'https://demosmscustom-3a3ca3cd2daa.herokuapp.com/execute'
-      }
-    }
-  });
+// Route pour la validation des données
+app.post('/validate', (req, res) => {
+  console.log('Validate endpoint called');
+  res.status(200).json({ success: true });
 });
 
-// Basic route for testing
-app.get('/', (req, res) => {
-  res.send('Server is running!');
+// Route pour la sauvegarde
+app.post('/save', (req, res) => {
+  console.log('Save endpoint called');
+  res.status(200).json({ success: true });
 });
 
-// Add your other routes here
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working!' });
+// Route pour l'exécution
+app.post('/execute', (req, res) => {
+  console.log('Execute endpoint called');
+  
+  // Récupération des données d'entrée
+  const { email, phone, Date } = req.body.inArguments[0];
+  
+  // Simulation de la validation du numéro de téléphone
+  const isPhoneValid = phone && phone.length >= 10;
+  
+  // Préparation de la réponse
+  const response = {
+    email: email,
+    validatedPhone: isPhoneValid ? phone : null,
+    verificationDate: new Date().toISOString(),
+    isVerified: isPhoneValid,
+    errorMessage: isPhoneValid ? null : 'Invalid phone number'
+  };
+
+  res.status(200).json(response);
 });
 
-app.listen(process.env.PORT || 3000, () => {
+app.listen(process.env.PORT || 8080, () => {
   console.log('SMS Custom Activity backend is now running!');
 });
