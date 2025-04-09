@@ -14,19 +14,19 @@
   "configurationArguments": {
     "applicationExtensionKey": "ab6caf9b-a2bb-4211-89f2-53f457552593",
     "save": {
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/save",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/save",
       "verb": "POST",
       "body": "",
       "useJwt": false
     },
     "publish": {
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/publish",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/publish",
       "verb": "POST",
       "body": "",
       "useJwt": false
     },
     "validate": {
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/validate",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/validate",
       "verb": "POST",
       "body": "",
       "useJwt": false
@@ -55,7 +55,7 @@
           "inputs": "{}"
         }
       ],
-      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/activity/execute",
+      "url": "https://demosmscustom-3a3ca3cd2daa.herokuapp.com/execute",
       "verb": "POST",
       "body": "",
       "header": "",
