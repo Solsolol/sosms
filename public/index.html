@@ -23,12 +23,12 @@
                 // Pré-remplir le formulaire avec les données de la DE
                 $('#email').val('{{Contact.Attribute.SMS_Journey_Entry.Email}}');
                 $('#phone').val('{{Contact.Attribute.SMS_Journey_Entry.Phone}}');
-                $('#date').val('{{Contact.Attribute.SMS_Journey_Entry.Date}}');
+                $('#date').val('{{Contact.Attribute.SMS_Journey_Entry.RegistrationDate}}');
             }
             
             connection.trigger('updateButton', {
                 button: 'next',
-                text: 'Valider',
+                text: 'Validation',
                 visible: true,
                 enabled: true
             });
@@ -46,22 +46,40 @@
         function validateAndUpdate(formData) {
             const phoneRegex = /^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/;
             const isPhoneValid = phoneRegex.test(formData.phone);
-
+    
             if (isPhoneValid) {
-                $('#phoneStatus').html('✓ Numéro valide').removeClass('invalid').addClass('valid');
+                $('#phoneStatus').html('✓ Validation en cours...').removeClass('invalid').addClass('valid');
                 
-                // Mise à jour du payload pour la DE
-                payload['arguments'].execute.inArguments = [{
-                    "email": formData.email,
-                    "phone": formData.phone,
-                    "Date": new Date().toISOString(),
-                    "previousDate": formData.date,
-                    "isValidated": true
-                }];
-                
-                payload['metaData'].isConfigured = true;
-                connection.trigger('updateActivity', payload);
-                showNotification('Données validées et enregistrées', 'success');
+                // Appel au serveur pour vérifier/mettre à jour la DE
+                fetch('/validateData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        payload['arguments'].execute.inArguments = [{
+                            "email": formData.email,
+                            "phone": formData.phone,
+                            "Date": new Date().toISOString(),
+                            "previousDate": formData.date,
+                            "isValidated": true
+                        }];
+                        
+                        payload['metaData'].isConfigured = true;
+                        connection.trigger('updateActivity', payload);
+                        showNotification('Données validées et enregistrées dans la DE', 'success');
+                    } else {
+                        throw new Error(data.error);
+                    }
+                })
+                .catch(error => {
+                    $('#phoneStatus').html('✗ Erreur de validation').removeClass('valid').addClass('invalid');
+                    showNotification('Erreur lors de la mise à jour: ' + error.message, 'error');
+                });
             } else {
                 $('#phoneStatus').html('✗ Format invalide').removeClass('valid').addClass('invalid');
                 showNotification('Format du numéro invalide', 'error');
@@ -122,7 +140,7 @@
                     <span id="phoneStatus" class="status"></span>
                 </div>
                 <div class="form-group">
-                    <label for="date">Date:</label>
+                    <label for="date">Date d'enregistrement:</label>
                     <input type="date" id="date" class="form-control" readonly>
                 </div>
             </form>
