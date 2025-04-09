@@ -1,6 +1,9 @@
 const express = require('express');
-const app = express();
 const axios = require('axios');
+const app = express();
+
+app.use(express.json());
+app.use(express.static('public'));
 
 // Configuration SFMC
 const sfmcConfig = {
@@ -10,52 +13,62 @@ const sfmcConfig = {
     restUri: 'https://mcjnmn9mfnxq4m36wvmtt59plqg1.rest.marketingcloudapis.com/'
 };
 
-app.use(express.json());
-app.use(express.static('public'));
-
-// Fonction pour obtenir le token d'authentification
-async function getAuthToken() {
+// Route pour vérifier/mettre à jour les données
+app.post('/validateData', async (req, res) => {
     try {
-        const response = await axios.post(`${sfmcConfig.authUri}/v2/token`, {
+        const { email, phone, date } = req.body;
+        
+        // Obtenir le token
+        const authResponse = await axios.post(`${sfmcConfig.authUri}/v2/token`, {
             grant_type: 'client_credentials',
             client_id: sfmcConfig.clientId,
             client_secret: sfmcConfig.clientSecret
         });
-        return response.data.access_token;
-    } catch (error) {
-        console.error('Auth Error:', error);
-        throw error;
-    }
-}
+        
+        // Vérifier si l'enregistrement existe
+        const searchResponse = await axios.get(
+            `${sfmcConfig.restUri}/data/v1/customobjectdata/key/SMS_Journey_Entry/rowset`,
+            {
+                headers: { Authorization: `Bearer ${authResponse.data.access_token}` },
+                params: { $filter: `Email eq '${email}'` }
+            }
+        );
 
-// Route pour l'exécution
-app.post('/execute', async (req, res) => {
-    try {
-        const token = await getAuthToken();
-        const { email, phone, Date } = req.body.inArguments[0];
-        
-        // Validation et traitement
-        const isPhoneValid = phone && phone.length >= 10;
-        
-        // Mise à jour dans SFMC si nécessaire
-        if (isPhoneValid) {
-            // Ici vous pouvez ajouter la logique pour mettre à jour SFMC
-            // en utilisant le token et restUri
+        if (searchResponse.data.items.length > 0) {
+            // Mise à jour
+            await axios.patch(
+                `${sfmcConfig.restUri}/data/v1/customobjectdata/key/SMS_Journey_Entry/rowset`,
+                {
+                    items: [{
+                        Email: email,
+                        Phone: phone,
+                        RegistrationDate: date
+                    }]
+                },
+                { headers: { Authorization: `Bearer ${authResponse.data.access_token}` } }
+            );
+            res.json({ success: true, message: 'Data updated' });
+        } else {
+            // Création
+            await axios.post(
+                `${sfmcConfig.restUri}/data/v1/customobjectdata/key/SMS_Journey_Entry/rowset`,
+                {
+                    items: [{
+                        Email: email,
+                        Phone: phone,
+                        RegistrationDate: date
+                    }]
+                },
+                { headers: { Authorization: `Bearer ${authResponse.data.access_token}` } }
+            );
+            res.json({ success: true, message: 'Data created' });
         }
-
-        res.status(200).json({
-            email: email,
-            validatedPhone: isPhoneValid ? phone : null,
-            verificationDate: new Date().toISOString(),
-            isVerified: isPhoneValid,
-            errorMessage: isPhoneValid ? null : 'Invalid phone number'
-        });
     } catch (error) {
-        console.error('Execute Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error:', error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.listen(process.env.PORT || 8080, () => {
-    console.log('SMS Custom Activity backend is now running!');
+    console.log('Server running');
 });
